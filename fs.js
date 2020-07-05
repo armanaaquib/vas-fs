@@ -1,6 +1,6 @@
 const fs = require('fs');
 const express = require('express');
-const getFid = require('./lib/getFid');
+const { genFid, extractExt } = require('./lib/util');
 
 const app = express();
 
@@ -10,17 +10,14 @@ app.use((req, res, next) => {
 });
 
 app.post('/save', (req, res) => {
+  const contentType = req.headers['content-type'];
+  const fileName = `${genFid()}.${extractExt(contentType)}`;
+
   const data = [];
   req.on('data', (chunk) => data.push(chunk));
 
   req.on('end', () => {
     const buffer = Buffer.concat(data);
-
-    const contentType = req.headers['content-type'];
-    const fid = getFid();
-    const ext = contentType.split('/')[1];
-    const fileName = `${fid}.${ext}`;
-
     fs.writeFile(`files/${fileName}`, buffer, () => {
       res.end(fileName);
     });
@@ -28,7 +25,7 @@ app.post('/save', (req, res) => {
 });
 
 app.get('/get/:fileName', (req, res) => {
-  const fileName = req.params.fileName;
+  const { fileName } = req.params;
   fs.readFile(`files/${fileName}`, (err, buffer) => {
     res.end(buffer);
   });
