@@ -2,8 +2,6 @@ const fs = require('fs');
 const express = require('express');
 const getFid = require('./lib/getFid');
 
-const types = {};
-
 const app = express();
 
 app.use((req, res, next) => {
@@ -20,22 +18,23 @@ app.post('/save', (req, res) => {
 
     const contentType = req.headers['content-type'];
     const fid = getFid();
-    types[fid] = contentType;
+    const ext = contentType.split('/')[1];
+    const fileName = `${fid}.${ext}`;
 
-    fs.writeFile(`files/${fid}`, buffer, () => {
-      res.end(fid);
+    fs.writeFile(`files/${fileName}`, buffer, () => {
+      res.end(fileName);
     });
   });
 });
 
-app.get('get/:fid', (req, res) => {
-  const fid = req.params.fid;
-
-  fs.readFile(`files/${fid}`, (err, buffer) => {
-    res.setHeader('Content-Type', types[fid]);
+app.get('/get/:fileName', (req, res) => {
+  const fileName = req.params.fileName;
+  fs.readFile(`files/${fileName}`, (err, buffer) => {
     res.end(buffer);
   });
 });
+
+app.use(express.static('files'));
 
 const main = (port) => {
   const PORT = port || 5000;
