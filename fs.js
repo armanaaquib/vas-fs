@@ -31,6 +31,11 @@ app.get('/get/:fileName', (req, res) => {
   });
 });
 
+app.use('/:filename', (req, res, next) => {
+  res.setHeader('Content-Disposition', 'attachment');
+  next();
+});
+
 app.use(express.static('files'));
 
 const main = (port) => {
@@ -38,4 +43,4 @@ const main = (port) => {
   app.listen(PORT, () => console.log(`listening FS: at ${PORT}`));
 };
 
-main();
+main(+process.argv[2]);
